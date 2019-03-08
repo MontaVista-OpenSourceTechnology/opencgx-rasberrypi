@@ -1,0 +1,161 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2009-2018 MontaVista Software, LLC.  All rights reserved.
+#
+# This file is licensed under the terms of the GNU General Public License 
+# version 2. This program is licensed "as is" without any warranty of any 
+# kind, whether express or implied.
+#
+# mvl-fetch
+#
+# This tool to list remote content objects
+# To fetch the file from uri to current directory
+#    mvl-fetch <uri> 
+# To fetch the file from uri to downloaddir/dirprefix dir
+#    mvl-fetch --download-dir <download-dir> --dirprefix <dirprefix> <uri>
+# To fetch the file from uri to currentdir/<dirprefix>
+#    mvl-fetch --dirprefix <dirprefix> <uri>
+# To fetch using wget
+#    mvl-fetch --use-wget <uri>
+
+
+from optparse import OptionParser, OptionGroup
+import os
+import sys
+import logging
+from urlparse import urlparse, urlunparse
+try:
+    from MVLContent.MVLContentTools import ContentTools
+except ImportError:
+    ipPath = os.path.dirname(os.path.abspath(os.path.dirname(os.path.expanduser(sys.argv[0]))))
+    pythonLibPath = os.path.join(ipPath, 'lib', 'python2.7')
+    sys.path.append(pythonLibPath)
+    os.execvp(ipPath + "/bin/python", [ipPath + "/bin/python"] + sys.argv)
+
+ipPath = os.path.dirname(os.path.abspath(os.path.dirname(os.path.expanduser(sys.argv[0]))))
+certpath = os.path.join(ipPath, "share", "ssl", "certs")
+os.environ["SSL_CERT_DIR"] = certpath
+
+class CmdOptions(object):
+    """class to define command line options for running mvl-fetch
+    """
+    def configureOptionParser(self):
+
+        parser.add_option("--username", dest="username", default=None, help="set username", metavar="<username>")
+        parser.add_option("--password", dest="password", default=None, help="set password", metavar="<password>")
+
+        parser.add_option("--download-dir", dest="downloaddir", default=None, help="set download directory for the file to be downloaded to", metavar="<download-dir>")
+        parser.add_option("-P", dest="downloaddir", default=None, help="set download directory for the file to be downloaded to", metavar="<download-dir>")
+        parser.add_option("-O", "--output-filename", dest="outputfile", default=None, help="set output name of the downloaeded file", metavar="<filename>")
+        parser.add_option("--dirprefix", dest="dirprefix", default=None, help="set directory prefix for the file to be downloaded to", metavar="<dirprefix>")
+
+        parser.add_option("--uri", dest="uri", default=None, help="set uri", metavar="<uri>")
+        parser.add_option("--progress", dest="progress", default=None, help="does nothing", metavar="<value>")
+        parser.add_option("-v", dest="progress", action="store_true", default=False, help="does nothing", metavar="<value>")
+        parser.add_option("-c", dest="cookie", action="store_true", default=False, help="outputs cookie path", metavar="<value>")
+
+        group = OptionGroup(parser, "Advance Options")
+        parser.add_option_group(group)
+        #options pass to Content Tools
+        group.add_option("--check-uri", action="store_true", dest="checkuri", default=False, help="check if uri exists on the server")
+        group.add_option("--content-cache-dir", dest="contentCacheDir", default=None, help="set mvl content cache directory", metavar="<content-cache-dir>")
+        group.add_option("--use-wget", action="store_true", dest="wget", default=False, help="use wget instead of urllib2 as the default tools to download")
+        group.add_option("--missing-ok", action="store_true", dest="missingok", default=False, help="ok if the file is not available for download. do not report download error messages")
+        group.add_option("--timeout", type="int", dest="defaulttimeout", default=60, help="specify timeout in seconds for blocking operation like the connection attempt. default is 60 seconds")
+
+        debugGroup = OptionGroup(parser, "Debug Options")
+        parser.add_option_group(debugGroup)
+        debugGroup.add_option("-d", "--debug", action="store_true", dest="isDebug", default=False, help="print debug messages")
+    def validate(self, options):
+        """cmd options validate
+        """
+        logger.log(logging.DEBUG, "validating cmdline options")
+        if options.uri == None:
+            options.uri = raw_input('Enter URI for listing content objects: ')
+        if options.outputfile and (os.path.basename(options.outputfile) != options.outputfile):
+           options.downloaddir = os.path.dirname(options.outputfile)
+           options.outputfile = os.path.basename(options.outputfile) 
+        if options.downloaddir == None :
+            options.downloaddir = os.getcwd()
+        options.downloaddir = os.path.expanduser(options.downloaddir)
+        options.downloaddir = os.path.abspath(options.downloaddir)
+        if not os.path.exists(options.downloaddir) :
+            sys.stderr.write('\nError: Download directory specified: ' + options.downloaddir + ' does not exist.\n')
+            logger.log(logging.DEBUG, 'program exists with error code 1\n')
+            sys.exit(1)
+
+
+def getDirprefixFromURI(url):
+    parsed = urlparse(url)
+    (prefix, filename) = os.path.split(parsed[2])
+    prefix = prefix.replace('/', '', 1)
+    return prefix
+def getAbsoluteURI(uri, parentURI):
+    if urlparse(uri)[0] == '' and parentURI != None:
+        parsed = urlparse(parentURI)
+        prefix = os.path.dirname(parsed[2])
+        absolutePath = os.path.abspath(os.path.join(prefix, uri))
+        newURLSegments = list(parsed)
+        newURLSegments[2] = absolutePath
+        return urlunparse(newURLSegments)
+    else :
+        return uri
+
+# Main program
+if __name__ == '__main__':
+    #create logger
+    logger = logging.getLogger("mvl-fetch")
+    #create console handler
+    ch = logging.StreamHandler()
+
+    #create formatter
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    #add formatter to ch
+    ch.setFormatter(formatter)
+    #add ch to logger
+    logger.addHandler(ch)
+
+    #create cmd options parser
+    usage = "usage: mvl-fetch [options] "
+    parser = OptionParser(usage=usage, version="%prog 2.2.0.180327151823")
+    cmdOptions = CmdOptions()
+    cmdOptions.configureOptionParser()
+
+    #parse cmd arguments
+    (options, args) = parser.parse_args()
+
+    #user.initialize(options)
+
+    if options.isDebug:
+        logger.log(logging.DEBUG, 'Running in Debug Mode')
+        logger.setLevel(logging.DEBUG)
+        ch.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
+        ch.setLevel(logging.INFO)
+
+    logger.log(logging.DEBUG, 'Running : ' + sys.argv[0])
+
+    try :
+
+        if len(args) > 0 and options.uri == None :
+            options.uri = args[0]
+
+        cmdOptions.validate(options)
+        #list content objects uri points to       
+        contentTools = ContentTools(options)
+        downloadPath = contentTools.downloadFile(options.uri, options.downloaddir, options.dirprefix, options=options, destFile=options.outputfile)
+
+        if downloadPath != None :
+            print 'File fetched successfully.\nDownload path: ' + downloadPath
+
+        else :
+            if not options.missingok :
+                sys.stderr.write('\nError: Unable to download file from: ' + options.uri + '\n')
+            logger.log(logging.DEBUG, 'program exists with error code 1\n')
+            sys.exit(1)
+        logger.log(logging.DEBUG, 'program exists\n')
+    except KeyboardInterrupt :
+        sys.stderr.write('Interrupted. Exiting.\n')
+        logger.log(logging.DEBUG, 'program exists with error code 1\n')
+        sys.exit(1)

@@ -1,0 +1,193 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2009-2018 MontaVista Software, LLC.  All rights reserved.
+#
+# This file is licensed under the terms of the GNU General Public License 
+# version 2. This program is licensed "as is" without any warranty of any 
+# kind, whether express or implied.
+#
+
+import os
+import sys
+
+import getopt
+
+normalize=False
+repoUrl=None
+repoDirname=None
+def usage():
+    print "-n normalize for build"
+    print "-r <git url for repository>"
+    print "-d <repo dirname>"
+try:
+    optlist, args = getopt.getopt(sys.argv[1:], 'nr:d:')
+except getopt.GetoptError, err:
+    print err
+    usage()
+    sys.exit(1)
+for o,a in optlist:
+    if ( o == "-n"):
+       normalize=True
+    if ( o == "-r"):
+       repoUrl=a
+    if ( o == "-d"):
+       repoDirname=a
+
+configfn = open("setup.sh").readlines()
+
+config=""
+start=False
+for i in configfn:
+    if start and i.startswith('"'):
+       break
+    if start:
+       config = config + i.replace(" \\","")
+    if not start and i.startswith("REPO_CONFIG="):
+       start=True
+
+
+Layers = []
+machine = ""
+url = ""
+distro = ""
+Sources = []
+buildid = ""
+cwd = os.getcwd()
+remotes={}
+for each in config.split("\n"):
+    if each == "":
+       continue
+    var=each.split("@")[0]
+    val=each.split("@")[1]
+    if var == "URL":
+       url=val
+for each in config.split("\n"):
+    if each == "":
+       continue
+    sublayer=""
+    branch=""
+    uri=""
+    var=each.split("@")[0]
+    val=each.split("@")[1]
+    if var == "LAYER":
+       val="%s;LAYER=1" % val
+       layer = val.split(";")
+       if normalize:
+          layer[0] = url + "/remote-layers/" + os.path.basename(layer[0])
+       Layers= Layers + [layer]
+       for l in layer:
+          if l.split("=")[0] == "branch":
+             branch=l.split("=")[1]
+          elif l.split("=")[0] == "layer":
+             sublayer=l.split("=")[1]
+          elif l.split("=")[0] == "LAYER":
+             continue
+          else:
+             uri=l
+             fetch="/".join(os.path.dirname(uri).split("/")[:3])
+             name=uri.split("/")[2]
+       if fetch not in remotes:
+          remotes[fetch] = name
+    if var == "MACHINE":
+       machine=val
+    if var == "BUILDID":
+       buildid=val
+    if var == "DISTRO":
+       distro=val
+    if var == "SOURCE":
+       val="%s;SOURCE=1" % val
+       source=val.split(";")
+       if normalize:
+          source[0] = url + "/source-repos/" + os.path.basename(source[0])
+       Sources = Sources + [val]
+       Layers = Layers + [source]
+       for s in source:
+           if s.split("=")[0] == "branch":
+              branch=s.split("=")[1]
+           elif s.split("=")[0] == "meta":
+              continue
+           elif s.split("=")[0] == "SOURCE":
+              continue
+           else:
+              uri = s
+              fetch="/".join(os.path.dirname(uri).split("/")[:3])
+              name=uri.split("/")[2]
+       if fetch not in remotes:
+          remotes[fetch] = name
+default = open("default.xml", "w")
+
+default.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+default.write("<manifest>\n")
+
+if repoUrl:
+  uri=repoUrl
+else:
+  uri=url
+local_manifest=False
+if os.path.isdir(uri):
+   uri = "file://" + os.path.abspath(uri)
+   local_manifest=True
+else:
+   urlfetch="/".join(os.path.dirname(uri).split("/")[:3])
+   urlname=uri.split("/")[2]
+   if urlfetch not in remotes:
+      remotes[urlfetch] = urlname
+
+if not local_manifest:
+  for fetch in remotes:
+    default.write("\t<remote fetch=\"" + fetch + "\" name=\"" + remotes[fetch] + "\"/>\n")
+else:
+    default.write("\t<remote fetch=\"file://foobar/\" name=\"local\"/>\n")
+default.write("\n")
+
+done={}
+for layer in Layers:
+    LAYER=False
+    for setting in layer[1:]:
+        if setting.split("=")[0] == "LAYER":
+           LAYER=True
+    name="/".join(layer[0].split("/")[3:])
+    if name[0] == "/":
+       name = name[1:]
+    if not name.endswith(".git"):
+        name = name + ".git"
+    if name not in done:
+       done[name] = 1
+       remote=layer[0].split("/")[2]
+       location=os.path.basename(name).replace(".git","")
+       branch=layer[1].split("=")[1]
+       if not local_manifest:
+         if LAYER:
+          default.write("\t<project name=\"" + name + "\" remote=\"" + remote +"\" path=\"layers/" + location + "\" revision=\"" + branch + "\"/>\n")
+         else:
+          default.write("\t<project name=\"" + name + "\" remote=\"" + remote +"\" path=\"sources/" + location + "\" revision=\"" + branch + "\"/>\n")
+       else:
+         newlayer=layer[0]
+         if not newlayer.endswith(".git"):
+            newlayer = newlayer + ".git"
+         if LAYER:
+          default.write("\t<project force-path=\"True\" name=\"" + newlayer + "\" path=\"layers/" + location + "\" remote=\"local\" revision=\"" + branch + "\"/>\n")
+         else:
+          default.write("\t<project force-path=\"True\" name=\"" + newlayer + "\" path=\"sources/" + location + "\" remote=\"local\" revision=\"" + branch + "\"/>\n")
+if repoDirname:
+   baseurl=uri + "/" + repoDirname 
+else:
+   baseurl=uri + "/" + os.path.basename(cwd)
+remote=baseurl.split("/")[2]
+location="."
+branch="master"
+name = "/".join(baseurl.split("/")[3:])
+if not name.endswith(".git"):
+    name = name + ".git"
+
+if name[0] == "/":
+    name = name[1:]
+
+if not local_manifest:
+   default.write("\t<project name=\"" + name + "\" remote=\"" + remote + "\" path=\".\" revision=\"master\"/>\n")
+else:
+   default.write("\t<project force-path=\"True\" remote=\"local\" name=\"" + name + "\" path=\".\" revision=\"master\"/>\n")
+  
+default.write("</manifest>\n")
+
+

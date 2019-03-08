@@ -1,0 +1,83 @@
+#!/bin/bash
+#
+# Copyright (c) 2009-2018 MontaVista Software, LLC.  All rights reserved.
+#
+# This file is licensed under the terms of the GNU General Public License
+# version 2. This program is licensed "as is" without any warranty of any
+# kind, whether express or implied.
+#
+
+
+if [ -n "$BASH_SOURCE" ]; then
+    THIS_SCRIPT=$BASH_SOURCE
+elif [ -n "$ZSH_NAME" ]; then
+    THIS_SCRIPT=$0
+else
+    THIS_SCRIPT="$(pwd)/changelogs"
+fi
+TMPFILE=$(mktemp)
+PROJECT_LOCATION=$(dirname $(dirname $(readlink -f $THIS_SCRIPT)))
+CHANGELOGS=$PROJECT_LOCATION/changelogs
+BASE_BRANCH=thud
+help_text () {
+    echo  >&2
+    echo "   changelogs Options:" >&2
+    echo  >&2
+    echo "	--output <directory location>   : Location where your changelogs will be output" >&2
+    echo  >&2
+    if [ -z "$1" ] ; then
+       exit 0
+    else
+       exit $1
+    fi
+}
+
+while [ "x$1" != "x" ]; do
+      case "$1" in
+              --output)
+                shift
+                if [ "x$1" == "x" ]; then
+                   echo "No location provided with output" 1>&2
+                   help_text 1
+                fi
+                CHANGELOGS=$1
+                mkdir -p $1
+                CHANGELOGS=$(readlink -f $CHANGELOGS)
+                shift
+                ;;
+              --help)
+                shift
+                help_text
+                ;;
+              *)
+                echo "Unknown option: '$1'" 1>&2
+                help_text 1
+                ;;
+      esac
+done
+RELEASEVERSION=$(git ls-remote $PROJECT_LOCATION | grep $BASE_BRANCH- | while read A B; do basename $B; done | tail -n 1)
+mkdir -p $CHANGELOGS
+chmod 755 $CHANGELOGS
+echo "Creating changelogs in $CHANGELOGS"
+$PROJECT_LOCATION/bin/layer-versions | while read REPO BRANCH NEWRELEASE LASTRELEASE; do
+    if [ "$REPO" = "Layer" ] ; then
+       continue
+    fi
+    BASEDIR=$(echo $REPO | sed "s,/,\ ,g" | cut -d " " -f 1)
+    REPODIR=$(echo $REPO | sed "s,/,\ ,g" | cut -d " " -f 2)
+    SUBLAYER=$(echo $REPO | sed "s,/,\ ,g" | cut -d " " -f 3)
+    pushd $PROJECT_LOCATION/$BASEDIR/$REPODIR > /dev/null
+        git log origin/$LASTRELEASE..origin/$NEWRELEASE $SUBLAYER > $TMPFILE
+        if [ -n "$(cat $TMPFILE)" ] ; then
+           OUTFILE=$REPODIR
+           if [ "$SUBLAYER" ] ; then
+              OUTFILE=$OUTFILE-$SUBLAYER
+           fi
+           mkdir -p $CHANGELOGS/$RELEASEVERSION/$BASEDIR
+           chmod 755 $CHANGELOGS/$RELEASEVERSION/$BASEDIR
+           cp $TMPFILE $CHANGELOGS/$RELEASEVERSION/$BASEDIR/$OUTFILE.log
+           chmod 644 $CHANGELOGS/$RELEASEVERSION/$BASEDIR/$OUTFILE.log
+        fi
+    popd > /dev/null
+done
+rm -rf $TMPFILE

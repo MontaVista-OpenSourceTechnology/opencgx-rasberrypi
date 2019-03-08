@@ -1,0 +1,81 @@
+#!/bin/bash
+#
+# Copyright (c) 2009-2018 MontaVista Software, LLC.  All rights reserved.
+#
+# This file is licensed under the terms of the GNU General Public License
+# version 2. This program is licensed "as is" without any warranty of any
+# kind, whether express or implied.
+#
+
+if [ -n "$BASH_SOURCE" ]; then
+    THIS_SCRIPT=$BASH_SOURCE
+elif [ -n "$ZSH_NAME" ]; then
+    THIS_SCRIPT=$0
+else
+    THIS_SCRIPT="$(pwd)/run-tests"
+fi
+PROJECT_DIR=$(readlink -f $(dirname $(dirname $THIS_SCRIPT)))
+if [ -z "$BUILDDIR" ] ; then
+   source $PROJECT_DIR/setup.sh || exit 1
+fi
+if [ -z "$TESTCOMPONENTS" ] ; then
+      TESTCOMPONENTS="mvtest qatest-ltp qatest-automount"
+fi
+if [ -z "$TEST_IMAGE" ] ; then
+   TEST_IMAGE="cgx-complete-image"
+fi
+
+if [ -z "$TESTS" ] ; then
+   TESTS="base:ptest:halt"
+fi
+
+if [ -z "$DATETIME" ] ; then
+   DATETIME=$(date +%y%m%d%H%M)
+fi
+
+if [ -z "$RESULTS_DIR" ] ; then
+   RESULTS_DIR=$PROJECT_DIR/results
+fi
+
+if [ -z "$MEMSIZE" ] ; then
+   MEMSIZE="2048"
+fi
+
+cp $BUILDDIR/conf/local.conf $BUILDDIR/conf/local.conf.save
+
+cat >> $BUILDDIR/conf/local.conf << EOF
+IMAGE_FSTYPES_forcevariable = " ext4 "
+EOF
+
+if [ -n "$(echo $TESTS | grep base)" ] ; then
+cat >> $BUILDDIR/conf/local.conf << EOF
+IMAGE_INSTALL_append = " $TESTCOMPONENTS "
+EOF
+fi
+
+if [ -n "$(echo $TESTS | grep ptest)" ] ; then
+cat >> $BUILDDIR/conf/local.conf << EOF
+EXTRA_IMAGE_FEATURES_append = " ptest-pkgs "
+EOF
+fi
+
+bitbake $TEST_IMAGE e2tools-native || exit 1
+bitbake build-sysroots || exit 1
+mkdir -p $RESULTS_DIR/$DATETIME
+if [ -e $RESULTS_DIR/current ] ; then
+   rm -f $RESULTS_DIR/current
+fi
+ln -s $DATETIME $RESULTS_DIR/current
+runqemu nographic slirp bootparams="mvtest='$TESTS'" qemuparams="-m $MEMSIZE" 2>&1 | tee $RESULTS_DIR/$DATETIME/qemu.log
+E2LSDIR=$BUILDDIR/tmp/sysroots/$(uname -m)/usr/bin
+IMAGEDIR="$(bitbake -e core-image-minimal | grep ^DEPLOY_DIR_IMAGE= | cut -d = -f 2 | sed s,\",,g)"
+IMAGE_RESULTSDIR="$(bitbake -e mvtest | grep QATEST_RESULTS_DIR= | cut -d = -f 2 | sed s,\",,g)"
+IMAGE_MACHINE="$(basename $IMAGEDIR)"
+IMAGE="$IMAGEDIR/$TEST_IMAGE-$IMAGE_MACHINE.ext4"
+$E2LSDIR/e2ls -l $IMAGE:$IMAGE_RESULTSDIR |\
+   while read A B C D E F G H I; do 
+         if [ -n "$H" ] ; then 
+            $E2LSDIR/e2cp $IMAGE:$IMAGE_RESULTSDIR/$H $RESULTS_DIR/$DATETIME/$H
+         fi
+   done
+cp $BUILDDIR/conf/local.conf.save $BUILDDIR/conf/local.conf

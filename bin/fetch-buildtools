@@ -1,0 +1,108 @@
+#!/bin/bash
+#
+# Copyright (c) 2009-2018 MontaVista Software, LLC.  All rights reserved.
+#
+# This file is licensed under the terms of the GNU General Public License
+# version 2. This program is licensed "as is" without any warranty of any
+# kind, whether express or implied.
+#
+
+if [ -n "$BASH_SOURCE" ]; then
+    THIS_SCRIPT=$BASH_SOURCE
+elif [ -n "$ZSH_NAME" ]; then
+    THIS_SCRIPT=$0
+else
+    THIS_SCRIPT="$(pwd)/fetch-buildtools"
+fi
+TOPDIR=$(readlink -f $(dirname $(dirname $THIS_SCRIPT)))
+
+if [ -z "$DOWNLOAD_LOCATION" ] ; then
+   DOWNLOAD_LOCATION=$TOPDIR
+fi
+if [ -z "$BUILDTOOLS_INSTALL" ] ; then
+   BUILDTOOLS_INSTALL="1"
+fi
+
+if [ ! -e $DOWWNLOAD_LOCATAION ] ; then
+   mkdir -p $DOWNLOAD_LOCATION
+fi
+
+EXIT="exit"
+check_lynx () {
+    if [ -z $(which lynx 2>/dev/null) ] ; then
+       if [ -f '/etc/debian_version' ] ; then
+          echo "lynx package is not installed on this host. Need to install: sudo apt-get install lynx"
+       elif [ -f '/etc/redhat-release' ] ; then
+          echo "lynx package is not installed on this host. Need to install: sudo yum install lynx"
+       else
+          echo "lynx package is not installed on this host. See distro documentation for how to install."
+       fi
+       $EXIT 1
+    fi
+} 
+USER_OPTION=""
+if [ -n "$MVL_USERNAME" ] ; then
+   USER_OPTION="--username $MVL_USERNAME"
+fi
+PASS_OPTION=""
+if [ -n "$MVL_PASSWORD" ] ; then
+   PASS_OPTION="--password $MVL_PASSWORD"
+fi
+
+fetch_command () {
+    downloadLocation=$1
+    uri=$2
+    host=$(echo $uri | cut -d / -f 3)
+    if [ -d "$(dirname $uri)" ] ; then
+       cp $uri $downloadLocation
+    elif [ "$host" = "staging.support.mvista.com" -o "$host" = "support.mvista.com" ] ; then
+       $TOPDIR/bin/mvl-fetch $USER_OPTION $PASS_OPTION -O $downloadLocation $uri
+    else
+       wget -O $downloadLocation $uri
+    fi
+}
+
+if [ ! -d buildtools ] ; then
+   if [ -e $DOWNLOAD_LOCATION/.buildtools -a -e "$(cat $DOWNLOAD_LOCATION/.buildtools 2>/dev/null)" ] ; then
+      buildtar=$(cat $DOWNLOAD_LOCATION/.buildtools)
+   else
+      if [ -z "$BUILD_TOOLS_LOCATION" ] ; then
+         yoctoDownloads=http://downloads.yoctoproject.org/releases/yocto/
+         check_lynx || $EXIT 1
+         latestRelease=$(echo -n $(lynx -dump $yoctoDownloads -nolist | cut -d / -f 1 | grep yocto- | grep -v yocto-2.5 | tail -n 1))
+         BUILD_TOOLS_LOCATION=$yoctoDownloads/$latestRelease/buildtools/
+         releaseDir="$latestRelease"
+         releaseVersion="$(echo $latestRelease | cut -d - -f 2)"
+         buildtar="x86_64-buildtools-nativesdk-standalone-$releaseVersion.sh"
+      fi 
+      if [ -z "$buildtar" ] ; then
+         check_lynx || $EXIT 1
+         TMPFILE=`mktemp --suffix=.html`
+         fetch_command $TMPFILE $(echo $BUILD_TOOLS_LOCATION | sed s,/$,,)
+         buildtar=$(lynx -dump -nolist $TMPFILE |
+            grep "\.sh" | grep -v md5sum | grep -v '..>' | sed "s:\[TXT\]::" | while read A B C; do echo $A; done)
+         rm -f $TMPFILE
+      fi
+      if [ "$buildtar" = "[" ] ; then
+         check_lynx || $EXIT 1
+         TMPFILE=`mktemp --suffix=.html`
+         fetch_command $TMPFILE $(echo $BUILD_TOOLS_LOCATION | sed s,/$,,)
+         buildtar=$(lynx -dump -nolist $TMPFILE | 
+             grep "\.sh" | grep -v md5sum | grep -v '..>' | while read A B C D; do echo $C; done)
+         rm -f $TMPFILE
+      fi
+
+      if [ ! -e $DOWNLOAD_LOCATION/$buildtar ] ; then
+            fetch_command $DOWNLOAD_LOCATION/$buildtar $BUILD_TOOLS_LOCATION/$buildtar || $EXIT 1
+            echo $buildtar > $DOWNLOAD_LOCATION/.buildtools
+      fi
+   fi
+   if [ ! -d "$TOPDIR/buildtools" -a "$BUILDTOOLS_INSTALL" = "1" ] ; then
+        chmod 755 $DOWNLOAD_LOCATION/$buildtar
+        bash $DOWNLOAD_LOCATION/$buildtar -y -d $TOPDIR/buildtools
+        if [ "$?" != "0" ] ; then
+           $EXIT 1
+        fi
+   fi
+fi
+

@@ -1,0 +1,389 @@
+#!/bin/bash
+#
+# Copyright (c) 2009-2018 MontaVista Software, LLC.  All rights reserved.
+#
+# This file is licensed under the terms of the GNU General Public License 
+# version 2. This program is licensed "as is" without any warranty of any 
+# kind, whether express or implied.
+#
+if [ -n "$BASH_SOURCE" ]; then
+    THIS_SCRIPT=$BASH_SOURCE
+elif [ -n "$ZSH_NAME" ]; then
+    THIS_SCRIPT=$0
+else
+    THIS_SCRIPT="$(pwd)/mirror-repo"
+fi
+PROJECT_LOCATION=$(readlink -f $(dirname $(dirname $THIS_SCRIPT)))
+if [ -e $PROJECT_LOCATION/.mirroroptions ] ; then
+   eval $(cat $PROJECT_LOCATION/.mirroroptions)
+else
+   MIRROR_DIR=""
+   MIRROR_URL=""
+   MIRROR_SOURCES="1"
+   REPO_NAME=""
+   NO_CHECKOUT="0"
+   PROTECTED_SOURCES="0"
+   SSTATE_URL=""
+   KEEP_SSTATE_URL="0"
+   EXPORT_BUILDTOOLS="1"
+   BUILDTOOLS_URL=""
+fi
+help_text () {
+    echo  >&2
+    echo "   Main mirror-repo Options:" >&2
+    echo  >&2
+    echo "	--mirror-dir <directory location>   : Location where your mirror will be generated on your local system" >&2
+    echo "	--mirror-url <url location>         : Location where your mirror would be accessed" >&2
+    echo "	--local-mirror <directory location> : Location to create a local mirror" >&2
+    echo "	                                    : Same as --mirror-dir <directory location> --mirror-url <directory location>" >&2
+    echo >&2
+    echo "   Additional mirrro-repo Options:" >&2
+    echo >&2
+    echo "	--repo-name <name>                  : Used to change the target repository name in the mirror, by default" >&2
+    echo "	                                    : it is the same as the name of the checkout release repository" >&2
+    echo "	--no-sources                        : Do not create a source mirror" >&2
+    echo "	--no-repository-checkout            : Do not checkout layer and source repositories for mirror" >&2
+    echo "	--protected-sources                 : Maintain protected sources configuration after mirror creation" >&2
+    echo "	--sstate-url <url location>         : Add a sstate mirror location configuration in to mirror" >&2
+    echo "	--keep-sstate                       : Maintain sstate mirror location already configured in repository" >&2
+    echo "	--buildtools-url                    : Location where you would like to pull the buildtools shar script from" >&2
+    echo "	--no-export-buildtools              : Don't mirror buildtools from upstream mirror" >&2  
+    echo "	--only-base                         : Same as --no-export-buildtools --no-sources --protected-sources" >&2
+    echo "	--help                              : This text" >&2
+    echo >&2
+    echo "   Use cases:" >&2
+    echo >&2
+    echo "	A web exported use case would look something like:" >&2
+    echo >&2
+    echo "	./bin/mirror-repo --mirror-dir ~/public_html/mirror --mirror-url http://<my machine>/~<username>/mirror" >&2
+    echo "	cd ~/workspace" >&2
+    echo "	git clone http://<my machine>/~<username>/mirror/<repo name>" >&2
+    echo >&2
+    echo "	A local mirror repository use case would look something like:" >&2
+    echo "	./bin/mirror-repo --local-mirror ~/mirror" >&2
+    echo "	cd ~/workspace" >&2
+    echo "	git clone ~/mirror/<repo name>" >&2
+    echo >&2
+    echo "	Once a mirror is created, the options used are saved for later updates. Simply execute bin/mirror-repo to update" >&2
+    echo >&2
+    if [ -z "$1" ] ; then
+       exit 0
+    else
+       exit $1
+    fi
+}
+while [ "x$1" != "x" ]; do
+      case "$1" in
+              --mirror-dir)
+                shift
+                if [ "x$1" == "x" ]; then
+                   echo "No mirror directory specified with --mirror-dir" 1>&2
+                   exit 1
+                fi
+                MIRROR_DIR=$1
+                mkdir -p $1
+                MIRROR_DIR=$(readlink -f $MIRROR_DIR)
+                shift
+                ;;
+              --mirror-url)
+                shift
+                if [ "x$1" == "x" ]; then
+                   echo "No mirror url specified with --mirror-url" 1>&2
+                   exit 1
+                fi
+                MIRROR_URL=$1
+                shift
+                ;;
+              --local-mirror)
+                shift
+                if [ "x$1" == "x" ]; then
+                   echo "No directory specified with --local-mirror" 1>&2
+                   exit 1
+                fi
+                MIRROR_DIR=$1
+                mkdir -p $1
+                MIRROR_DIR=$(readlink -f $MIRROR_DIR)
+                MIRROR_URL=$(readlink -f $MIRROR_DIR)
+                shift
+                ;;
+              --repo-name)
+                shift
+                if [ "x$1" == "x" ]; then
+                   echo "No name specified with --repo-name" 1>&2
+                   exit 1
+                fi
+                REPO_NAME=$1
+                shift
+                ;;
+              --no-sources)
+                MIRROR_SOURCES="0"
+                shift
+                ;;
+              --only-base)
+                NO_CHECKOUT="1"
+                PROTECTED_SOURCES=1
+                MIRROR_SOURCES="0"
+                EXPORT_BUILDTOOLS="0"
+                shift
+                ;;
+              --no-repository-checkout)
+                NO_CHECKOUT="1"
+                shift
+                ;;
+              --protected-sources)
+                PROTECTED_SOURCES=1
+                shift
+                ;;
+              --sstate-url)
+                shift
+                if [ "x$1" == "x" ]; then
+                   echo "No url specified with --sstate-url" 1>&2
+                   exit 1
+                fi
+                SSTATE_URL=$1
+                shift
+                ;;
+              --keep-sstate)
+                shift
+                KEEP_SSTATE_URL="1"
+                ;;
+              --no-export-buildtools)
+                shift
+                EXPORT_BUILDTOOLS="0"
+                ;;
+              --buildtools-url)
+                shift
+                if [ "x$1" == "x" ]; then
+                   echo "No url specified with --buildtools-url" 1>&2
+                   help_text 1
+                fi
+                BUILDTOOLS_URL=$1
+                shift
+                ;;
+              --help)
+                shift
+                help_text
+                ;;
+              *)
+                echo "Unknown option: '$1'" 1>&2
+                help_text 1
+                ;;
+      esac
+done
+
+if [ "x$MIRROR_DIR" = "x" ] ; then
+     echo "--mirror-dir option is required to point to where you would like to create your mirror" 1>&2
+     help_text 1
+fi
+if [ "x$MIRROR_URL" = "x" ] ; then
+     echo "--mirror-url option is required to point to where you will host your mirror" 1>&2
+     help_text 1
+elif [ -z "$(echo $MIRROR_URL | grep '://')" ] ; then
+     mkdir -p $MIRROR_URL
+     MIRROR_URL=$(readlink -f $MIRROR_URL)
+fi
+
+cat > $PROJECT_LOCATION/.mirroroptions << EOF
+MIRROR_DIR="$MIRROR_DIR"
+MIRROR_URL="$MIRROR_URL"
+MIRROR_SOURCES="$MIRROR_SOURCES"
+REPO_NAME="$REPO_NAME"
+NO_CHECKOUT="$NO_CHECKOUT"
+PROTECTED_SOURCES="$PROTECTED_SOURCES"
+SSTATE_URL="$SSTATE_URL"
+KEEP_SSTATE_URL="$KEEP_SSTATE_URL"
+EXPORT_BUILDTOOLS="$EXPORT_BUILDTOOLS"
+BUILDTOOLS_URL="$BUILDTOOLS_URL"
+EOF
+BASE_BRANCH="thud"
+cd $PROJECT_LOCATION
+git submodule init
+
+eval $(cat $PROJECT_LOCATION/setup.sh  | sed -n /REPO_CONFIG=/,/^\"/p)
+REMOTE=$(git config --list | grep ^remote.*.url | cut -d = -f 1)
+URI=$(git config $REMOTE | sed s,\.git$,,)
+if [ "x$REPO_NAME" = "x" ] ; then
+   URIDIR=$(basename $URI)
+else
+   URIDIR=$REPO_NAME
+fi
+URLBASE=$(echo $URI | cut -d / -f 1-3)
+HOST=$(echo $URI | cut -d / -f 3)
+if [[ ("x$URLBASE" != "x") && ( "$HOST" = "staging.support.mvista.com" || "$HOST" = "support.mvista.com") ]] ; then
+   git config --global credential.$URLBASE.helper $PROJECT_LOCATION/bin/git-credential-mvl
+fi
+
+if [ -z $(echo $URIDIR | grep \.git$) ] ; then
+   BARE=$MIRROR_DIR/$URIDIR.git
+   CLONE=$MIRROR_DIR/$URIDIR
+else
+   BARE=$MIRROR_DIR/$URIDIR
+   CLONE=$(echo $MIRROR_DIR/$URIDIR | sed s,.git$,,)
+fi
+if [ -d $BARE ] ; then
+	pushd $BARE 2>/dev/null 1>/dev/null
+                echo -n "$(basename $BARE): "
+                rm -f objects/info/alternates
+		git fetch 2>/dev/null
+	popd 2>/dev/null 1>/dev/null
+else
+        mkdir -p $MIRROR_DIR
+        git clone --no-hardlinks --mirror --bare --shared $URI $BARE
+	pushd $BARE 2>/dev/null 1>/dev/null
+                rm -f objects/info/alternates
+		git fetch 2>/dev/null
+	popd 2>/dev/null 1>/dev/null
+fi
+
+rm -rf $CLONE
+if [ -d $CLONE ] ; then
+        pushd $CLONE 2>/dev/null 1>/dev/null
+           echo -n "$(basename $CLONE): "
+           git fetch
+           git submodule init
+        popd 2>/dev/null 1>/dev/null
+else
+	git clone --no-hardlinks $BARE $CLONE
+        pushd $CLONE 2>/dev/null 1>/dev/null
+        git submodule init
+        popd 2>/dev/null 1>/dev/null
+fi
+pushd $CLONE
+BRANCHES=$(git branch -a | grep -v HEAD | grep remotes | cut -d / -f 3)
+if [ "$NO_CHECKOUT" = "0" ] ; then
+   mkdir -p $MIRROR_DIR/remote-layers
+   mkdir -p $MIRROR_DIR/source-repos
+fi
+echo $BRANCHES
+URL=""
+pushd $MIRROR_DIR 2>/dev/null 1>/dev/null
+for REPO_BRANCH in $BRANCHES; do
+      pushd $CLONE
+         git checkout $REPO_BRANCH
+      popd
+      for config in $(echo $REPO_CONFIG | sed s,\\\\,,g) ; do
+        VAR=$(echo $config | cut -d @ -f 1)
+        VAL=$(echo $config | cut -d @ -f 2)
+        if [ "$VAR" = "URL" ] ; then
+             URL=$VAL
+        fi
+          if [ "$VAR" = "LAYER" -o "$VAR" = "SOURCE" ] ; then
+             if [ "$VAR" = "LAYER" ] ; then
+                subdir="remote-layers"
+                submoduledir="layers"
+             else
+                subdir="source-repos"
+                submoduledir="sources"
+             fi
+             repo=$(echo $VAL | cut -d \; -f 1)
+             repoDir=$(basename $repo | sed s,.git,,)
+             branch="master"
+             for option in $(echo $options | sed s,\;,\ ,g); do
+                if [ "$(echo $option | cut -d = -f 1)" = "branch" ] ; then
+                   branch=$(echo $option | cut -d = -f 2)
+                fi
+             done
+             mirroredRepo=$(git --git-dir $PROJECT_LOCATION/.git config --get submodule.$submoduledir/$repoDir.url)
+             if [ "$NO_CHECKOUT" = "0" ] ; then
+                if [ -d $subdir/$repoDir.git ] ; then
+                   pushd $subdir/$repoDir.git 2>/dev/null 1>/dev/null
+                      echo -n "$(basename $repoDir): "
+                      git fetch --all || exit 1
+                   popd 2>/dev/null 1>/dev/null
+                else
+                   if [ -z "$GIT_RETRIES" -o "$GIT_RETRIES" = 0 ] ; then
+                      GIT_RETRIES=5
+                   fi
+                   if [ -z "$GIT_DELAY" ] ; then
+                      GIT_DELAY=10
+                   fi
+                   GIT_COUNT=1
+                   while [ $GIT_COUNT -lt $GIT_RETRIES ] ; do
+                      if [ "$branch" == "master" ] ; then
+                         git clone --no-hardlinks --mirror --bare --shared $mirroredRepo $subdir/$repoDir.git
+                      else
+                         git clone --no-hardlinks --branch=$branch --mirror --bare --shared $mirroredRepo $subdir/$repoDir.git
+                      fi
+                      if [ $? -eq 0 ] ; then
+                         GIT_RETRIES=0
+                         break
+                      fi
+                      GIT_COUNT=$(($GIT_COUNT + 1))
+                      echo "git clone failed, sleeping for $GIT_DELAY seconds and retrying"
+                      sleep $GIT_DELAY
+                   done
+                   if [ $GIT_RETRIES != 0 ] ; then
+                      $EXIT 1
+                   fi
+                fi
+                pushd $subdir/$repoDir.git 2>/dev/null 1>/dev/null
+                   git update-server-info
+                popd 2>/dev/null 1>/dev/null
+             fi
+          fi
+          pushd $CLONE 2>/dev/null >/dev/null
+          git config --file=.gitmodules submodule.$submoduledir/$repoDir.url $MIRROR_URL/$subdir/$repoDir.git
+          popd 2>/dev/null >/dev/null
+       done
+  if [ "x$BUILDTOOLS_URL" != "x" ] ; then
+     sed -i $CLONE/setup.sh -e "s,^BUILD_TOOLS_LOCATION=.*$,BUILD_TOOLS_LOCATION=$BUILDTOOLS_URL,"
+  elif [ "$EXPORT_BUILDTOOLS" = "1" ] ; then
+     pushd $PROJECT_LOCATION
+     BUILD_TOOLS_LOCATION=$(cat $CLONE/setup.sh | grep ^BUILD_TOOLS_LOCATION= | cut -d = -f 2)
+     if [ -n "$BUILD_TOOLS_LOCATION" ] ; then
+          export BUILD_TOOLS_LOCATION
+     fi
+     mkdir -p $MIRROR_DIR/tools
+     export DOWNLOAD_LOCATION=$MIRROR_DIR/tools
+     pushd $MIRROR_DIR
+     BUILDTOOLS_INSTALL=0 bash -x $PROJECT_LOCATION/bin/fetch-buildtools || exit 1
+     popd
+     sed -i $CLONE/setup.sh -e "s,^buildtar=\"\",buildtar=\"$(cat $MIRROR_DIR/tools/.buildtools)\","
+     sed -i $CLONE/setup.sh -e "s,^BUILD_TOOLS_LOCATION=.*$,BUILD_TOOLS_LOCATION=$MIRROR_URL/tools/,"
+     popd
+  else
+     sed -i $CLONE/setup.sh -e "s,^BUILD_TOOLS_LOCATION=.*$,BUILD_TOOLS_LOCATION=$BUILDTOOLS_URL,"
+  fi
+
+  pushd $CLONE 2>/dev/null 1>/dev/null
+  if [ "$MIRROR_SOURCES" = "1" ] ; then
+   if [ -z "$(grep ^SOURCE_MIRROR_URL= $CLONE/setup.sh)" ] ; then
+      sed -i $CLONE/setup.sh -e 's,TOPDIR=$(dirname $THIS_SCRIPT),REPLACE_ME\nTOPDIR=$(dirname $THIS_SCRIPT),'
+   else
+      sed -i $CLONE/setup.sh -e 's,^SOURCE_MIRROR_URL=.*,REPLACE_ME,'
+   fi
+   sed -i $CLONE/setup.sh -e "s,REPLACE_ME,SOURCE_MIRROR_URL=$MIRROR_URL/source-mirror,"
+  else
+     sed -i $CLONE/setup.sh -e 's,^SOURCE_MIRROR_URL=.*,,'
+  fi
+  if [ "$PROTECTED_SOURCES" = "1" ] ; then
+     sed -i $CLONE/setup.sh -e "s,^PROTECTED_SOURCE_URL=.*,PROTECTED_SOURCE_URL=$MIRROR_URL/source-mirror,"
+  else
+     sed -i $CLONE/setup.sh -e 's,^PROTECTED_SOURCE_URL=.*,,'
+  fi
+  if [ "x$SSTATE_URL" != "x" ] ; then
+    if [ -z "$(grep ^SSTATE_MIRRORS= $CLONE/setup.sh)" ] ; then
+      sed -i $CLONE/setup.sh -e 's,TOPDIR=$(dirname $THIS_SCRIPT),REPLACE_ME\nTOPDIR=$(dirname $THIS_SCRIPT),'
+    else
+      sed -i $CLONE/setup.sh -e 's,^SSTATE_MIRRORS=.*,REPLACE_ME,'
+    fi
+    sed -i $CLONE/setup.sh -e "s,REPLACE_ME,SSTATE_MIRRORS=$SSTATE_URL,"
+  elif [ "$KEEP_SSTATE_URL" != "1" ] ; then
+    sed -i $CLONE/setup.sh -e "s,^SSTATE_MIRRORS=.*,,"
+  fi
+  sed -i $CLONE/README.md -e "s,$URL,$MIRROR_URL,"
+  sed -i $CLONE/setup.sh -e "s,^URL@.*,URL@$MIRROR_URL\ \\\,"
+  $PROJECT_LOCATION/bin/repo-manifest -n -r $MIRROR_URL
+  git add .gitmodules setup.sh default.xml README.md
+  git commit -m "Update uri location"
+  git push
+  popd
+done
+if [ "$MIRROR_SOURCES" = "1" ] ; then
+   $PROJECT_LOCATION/bin/fetch-sources --mirror-dir $MIRROR_DIR || exit 1
+fi
+pushd $BARE 2>/dev/null 1>/dev/null
+git update-server-info
+popd 2>/dev/null 1>/dev/null
+rm -rf $CLONE
+ln -s $(basename $BARE) $CLONE

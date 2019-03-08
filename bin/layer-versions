@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+# Copyright (c) 2009-2018 MontaVista Software, LLC.  All rights reserved.
+#
+# This file is licensed under the terms of the GNU General Public License
+# version 2. This program is licensed "as is" without any warranty of any
+# kind, whether express or implied.
+#
+
+if [ -n "$BASH_SOURCE" ]; then
+    THIS_SCRIPT=$BASH_SOURCE
+elif [ -n "$ZSH_NAME" ]; then
+    THIS_SCRIPT=$0
+else
+    THIS_SCRIPT="$(pwd)/layer-versions"
+fi
+RELEASE_BRANCH="thud"
+PROJECT_LOCATION=$(dirname $(dirname $THIS_SCRIPT))
+TMPFILE=$(mktemp)
+eval $(cat $PROJECT_LOCATION/setup.sh  | sed -n /REPO_CONFIG=/,/^\"/p)
+echo "Layer Versions" > $TMPFILE
+echo "Layer	Branch	  Latest	Previous" >> $TMPFILE
+for config in $(echo $REPO_CONFIG | sed s,\\\\,,g) ; do
+      VAR=$(echo $config | cut -d @ -f 1)
+      VAL=$(echo $config | cut -d @ -f 2)
+      if [ "$VAR" = "LAYER" -o "$VAR" = "SOURCE" ] ; then
+         if [ "$VAR" = "LAYER" ] ; then
+            subdir="layers"
+         else
+            subdir="sources"
+         fi
+         options=$(echo $VAL | cut -d \; -f 2-)
+         repo=$(echo $VAL | cut -d \; -f 1)
+         repoDir=$(basename $repo | sed s,.git,,)
+         branch="master"
+         sublayer=""
+         for option in $(echo $options | sed s,\;,\ ,g); do
+            if [ "$(echo $option | cut -d = -f 1)" = "branch" ] ; then
+               branch=$(echo $option | cut -d = -f 2)
+            fi
+            if [ "$(echo $option | cut -d = -f 1)" = "layer" ] ; then
+               sublayer=$(echo $option | cut -d = -f 2)
+            fi
+         done
+         pushd $PROJECT_LOCATION/$subdir/$repoDir 2>/dev/null >/dev/null
+             latest=$(git branch -a | \
+                      grep $RELEASE_BRANCH-[0-9][0-9]\* | \
+                      grep remotes/origin | \
+                      sed s,remotes/origin/,, | \
+                      sort -n | \
+                      tail -n 1)
+             previous=$(git branch -a | \
+                      grep $RELEASE_BRANCH-[0-9][0-9]\* | \
+                      grep remotes/origin | \
+                      sed s,remotes/origin/,, | \
+                      sort -n | \
+                      tail -n 2 | \
+                      head -n 1)
+             if [ "$previous" = "$latest" ] ; then
+                   previous="None"
+             fi
+         popd 2>/dev/null >/dev/null
+         if [ -n "$sublayer" ] ; then
+            echo "$subdir/$repoDir/$sublayer	$branch	$latest	$previous" >> $TMPFILE
+         else
+            echo "$subdir/$repoDir	$branch	$latest	$previous" >> $TMPFILE
+         fi
+      fi
+done
+cat $TMPFILE | column -t  -s "	"
