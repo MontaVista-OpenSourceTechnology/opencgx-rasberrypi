@@ -55,6 +55,7 @@ LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-montavista-cgl.git
 LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-raspberrypi.git;branch=thud \
 MACHINE@raspberrypi3-64 \
 DISTRO@mvista-cgx \
+CONFIG@LICENSE_FLAGS_WHITELIST=commercial \
 "
 TOPDIR=$(dirname $THIS_SCRIPT)
 buildtar=""
