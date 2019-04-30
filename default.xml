@@ -8,7 +8,7 @@
 	<project name="MontaVista-OpenSourceTechnology/meta-virtualization.git" remote="github.com" path="layers/meta-virtualization" revision="thud"/>
 	<project name="MontaVista-OpenSourceTechnology/meta-qa.git" remote="github.com" path="layers/meta-qa" revision="thud"/>
 	<project name="MontaVista-OpenSourceTechnology/meta-montavista-cgx.git" remote="github.com" path="layers/meta-montavista-cgx" revision="thud"/>
-	<project name="MontaVista-OpenSourceTechnology/meta-selinux.git" remote="github.com" path="layers/meta-selinux" revision="master"/>
+	<project name="MontaVista-OpenSourceTechnology/meta-selinux.git" remote="github.com" path="layers/meta-selinux" revision="thud"/>
 	<project name="MontaVista-OpenSourceTechnology/meta-security.git" remote="github.com" path="layers/meta-security" revision="thud"/>
 	<project name="MontaVista-OpenSourceTechnology/meta-cgl.git" remote="github.com" path="layers/meta-cgl" revision="master"/>
 	<project name="MontaVista-OpenSourceTechnology/meta-cloud-services.git" remote="github.com" path="layers/meta-cloud-services" revision="thud"/>
