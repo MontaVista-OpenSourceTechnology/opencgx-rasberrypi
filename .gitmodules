@@ -33,6 +33,7 @@
 [submodule "layers/meta-cgl"]
 	path = layers/meta-cgl
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-cgl.git
+	branch = thud
 [submodule "layers/meta-cloud-services"]
 	path = layers/meta-cloud-services
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-cloud-services.git

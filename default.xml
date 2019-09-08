@@ -10,7 +10,7 @@
 	<project name="MontaVista-OpenSourceTechnology/meta-montavista-cgx.git" remote="github.com" path="layers/meta-montavista-cgx" revision="thud"/>
 	<project name="MontaVista-OpenSourceTechnology/meta-selinux.git" remote="github.com" path="layers/meta-selinux" revision="thud"/>
 	<project name="MontaVista-OpenSourceTechnology/meta-security.git" remote="github.com" path="layers/meta-security" revision="thud"/>
-	<project name="MontaVista-OpenSourceTechnology/meta-cgl.git" remote="github.com" path="layers/meta-cgl" revision="master"/>
+	<project name="MontaVista-OpenSourceTechnology/meta-cgl.git" remote="github.com" path="layers/meta-cgl" revision="thud"/>
 	<project name="MontaVista-OpenSourceTechnology/meta-cloud-services.git" remote="github.com" path="layers/meta-cloud-services" revision="thud"/>
 	<project name="MontaVista-OpenSourceTechnology/meta-montavista-cgl.git" remote="github.com" path="layers/meta-montavista-cgl" revision="thud"/>
 	<project name="MontaVista-OpenSourceTechnology/meta-raspberrypi.git" remote="github.com" path="layers/meta-raspberrypi" revision="thud"/>
