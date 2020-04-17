@@ -5,8 +5,8 @@ Montavista Software, LLC. release of raspberrypi3-64.
 How to use:
 ==========
 ```
-git clone --recursive https://github.com/MontaVista-OpenSourceTechnology/opencgx-rasberrypi-2.6
-cd opencgx-rasberrypi-2.6
+git clone --recursive https://github.com/MontaVista-OpenSourceTechnology/opencgx-rasberrypi
+cd opencgx-rasberrypi
 source setup.sh
 ```
 Optionally, you can pass setup.sh a directory name to use instead of the
@@ -39,7 +39,7 @@ poky/oe-init-build-env script.
 directory layout:
 ================
 ```
-opencgx-rasberrypi-2.6/
+opencgx-rasberrypi/
        project - bitbake project for the raspberrypi3-64 project build
        buildtools - build tools to provide minimal build requirement for poky builds
        layers - layers for building raspberrypi3-64 project
