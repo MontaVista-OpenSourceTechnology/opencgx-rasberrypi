@@ -14,5 +14,5 @@
 	<project name="MontaVista-OpenSourceTechnology/meta-cloud-services.git" remote="github.com" path="layers/meta-cloud-services" revision="dunfell"/>
 	<project name="MontaVista-OpenSourceTechnology/meta-montavista-cgl.git" remote="github.com" path="layers/meta-montavista-cgl" revision="dunfell"/>
 	<project name="MontaVista-OpenSourceTechnology/meta-raspberrypi.git" remote="github.com" path="layers/meta-raspberrypi" revision="dunfell"/>
-	<project name="MontaVista-OpenSourceTechnology/opencgx-rasberrypi-2.6" remote="github.com" path="." revision="dunfell"/>
+	<project name="MontaVista-OpenSourceTechnology/opencgx-rasberrypi-2.6" remote="github.com" path="." revision="master"/>
 </manifest>
