@@ -5,7 +5,7 @@ Montavista Software, LLC. release of raspberrypi3-64.
 How to use:
 ==========
 ```
-git clone --recursive https://github.com/MontaVista-OpenSourceTechnology/opencgx-rasberrypi
+git clone -b next --recursive https://github.com/MontaVista-OpenSourceTechnology/opencgx-rasberrypi
 cd opencgx-rasberrypi
 source setup.sh
 ```
