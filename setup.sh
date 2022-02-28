@@ -40,7 +40,6 @@ LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-clang.git;branch=m
 LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-virtualization.git;branch=master \
 LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-qa.git;branch=master;layer=meta-qa-framework \
 LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-qa.git;branch=master;layer=meta-qa-testsuites \
-LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-montavista-cgx.git;branch=master;layer=qemu-bsp \
 LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-montavista-cgx.git;branch=master \
 LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-openembedded.git;branch=master;layer=meta-perl \
 LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-openembedded.git;branch=master;layer=meta-gnome \
@@ -50,12 +49,12 @@ LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-selinux.git;branch
 LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-security.git;branch=master \
 LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-cgl.git;branch=master;layer=meta-cgl-common \
 LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-cloud-services.git;branch=master \
-LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-cloud-services.git;branch=master;layer=meta-openstack \
 LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-montavista-cgl.git;branch=master \
 LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-raspberrypi.git;branch=master \
 MACHINE@raspberrypi3-64 \
 DISTRO@mvista-cgx \
-CONFIG@LICENSE_FLAGS_WHITELIST=commercial \
+CONFIG@LICENSE_FLAGS_ACCEPTED=commercial \
+CONFIG@PREFERRED_PROVIDER_virtual/kernel=linux-raspberrypi \
 "
 TOPDIR=$(dirname $THIS_SCRIPT)
 buildtar=""
