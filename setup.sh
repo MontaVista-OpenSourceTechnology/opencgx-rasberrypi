@@ -54,6 +54,7 @@ LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-raspberrypi.git;br
 MACHINE@raspberrypi3-64 \
 DISTRO@mvista-cgx \
 CONFIG@LICENSE_FLAGS_ACCEPTED=commercial \
+CONFIG@SRCREV_machine:pn-linux-raspberrypi=2f17f80d7fa9734b1af6ae94ecd35cd9c71770fa \
 CONFIG@PREFERRED_PROVIDER_virtual/kernel=linux-raspberrypi \
 "
 TOPDIR=$(dirname $THIS_SCRIPT)
