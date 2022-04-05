@@ -51,7 +51,7 @@ LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-cgl.git;branch=mas
 LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-cloud-services.git;branch=master \
 LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-montavista-cgl.git;branch=master \
 LAYER@https://github.com/MontaVista-OpenSourceTechnology/meta-raspberrypi.git;branch=master \
-MACHINE@raspberrypi3-64 \
+MACHINE@raspberrypi4-64 \
 DISTRO@mvista-cgx \
 CONFIG@LICENSE_FLAGS_ACCEPTED=commercial \
 CONFIG@PREFERRED_PROVIDER_virtual/kernel=linux-raspberrypi \
@@ -69,9 +69,6 @@ for config in $REPO_CONFIG; do
        HOST=$(echo $URL | cut -d / -f 3)
     fi
 done
-
-BUILD_TOOLS_LOCATION=http://downloads.yoctoproject.org/releases/yocto/yocto-3.1/buildtools/
-buildtar=x86_64-buildtools-extended-nativesdk-standalone-3.1.sh
 
 export BUILD_TOOLS_LOCATION
 export buildtar
