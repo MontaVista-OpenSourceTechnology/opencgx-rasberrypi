@@ -100,6 +100,7 @@ if [ ! -e $TOPDIR/.drop ] ; then
       pushd $TOPDIR 2>/dev/null 1>/dev/null
          git config pull.rebase True
          git submodule init || $EXIT 1
+         git submodule update --remote || $EXIT 1
 	 if [ -z "$GIT_RETRIES" ] ; then
             GIT_RETRIES=5
 	 fi
@@ -179,7 +180,7 @@ for config in $REPO_CONFIG; do
     fi
     if [ "$VAR" = "SOURCE" ] ; then
           META=""
-          BRANCH="master"
+          BRANCH="kirkstone-cgx"
           TREE=$(echo $VAL | cut -d \; -f 1)
           for option in $(echo $VAL | sed s,\;,\ ,g); do
               OVAR=$(echo $option | cut -d = -f 1) 
