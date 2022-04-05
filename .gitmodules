@@ -1,48 +1,48 @@
 [submodule "layers/poky"]
 	path = layers/poky
 	url = https://github.com/MontaVista-OpenSourceTechnology/poky.git
-	branch = master
+	branch = kirkstone-cgx
 [submodule "layers/meta-openembedded"]
 	path = layers/meta-openembedded
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-openembedded.git
-	branch = master
+	branch = kirkstone-cgx
 [submodule "layers/meta-clang"]
 	path = layers/meta-clang
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-clang.git
-	branch = master
+	branch = kirkstone-cgx
 [submodule "layers/meta-virtualization"]
 	path = layers/meta-virtualization
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-virtualization.git
-	branch = master
+	branch = kirkstone-cgx
 [submodule "layers/meta-qa"]
 	path = layers/meta-qa
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-qa.git
-	branch = master
+	branch = kirkstone-cgx
 [submodule "layers/meta-montavista-cgx"]
 	path = layers/meta-montavista-cgx
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-montavista-cgx.git
-	branch = master
+	branch = kirkstone-cgx
 [submodule "layers/meta-selinux"]
 	path = layers/meta-selinux
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-selinux.git
-	branch = master
+	branch = kirkstone-cgx
 [submodule "layers/meta-security"]
 	path = layers/meta-security
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-security.git
-	branch = master
+	branch = kirkstone-cgx
 [submodule "layers/meta-cgl"]
 	path = layers/meta-cgl
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-cgl.git
-	branch = master
+	branch = kirkstone-cgx
 [submodule "layers/meta-cloud-services"]
 	path = layers/meta-cloud-services
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-cloud-services.git
-	branch = master
+	branch = kirkstone-cgx
 [submodule "layers/meta-montavista-cgl"]
 	path = layers/meta-montavista-cgl
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-montavista-cgl.git
-	branch = master
+	branch = kirkstone-cgx
 [submodule "layers/meta-raspberrypi"]
 	path = layers/meta-raspberrypi
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-raspberrypi.git
-	branch = master
+	branch = kirkstone-cgx

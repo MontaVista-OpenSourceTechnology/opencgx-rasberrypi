@@ -1,11 +1,11 @@
-# Release repository for raspberrypi3-64
+# Release repository for raspberrypi4-64
 
-Montavista Software, LLC. release of raspberrypi3-64. 
+Montavista Software, LLC. release of raspberrypi4-64. 
 
 How to use:
 ==========
 ```
-git clone -b next --recursive https://github.com/MontaVista-OpenSourceTechnology/opencgx-rasberrypi
+git clone -b kirkstone --recursive https://github.com/MontaVista-OpenSourceTechnology/opencgx-rasberrypi
 cd opencgx-rasberrypi
 source setup.sh
 ```
@@ -40,11 +40,11 @@ directory layout:
 ================
 ```
 opencgx-rasberrypi/
-       project - bitbake project for the raspberrypi3-64 project build
+       project - bitbake project for the raspberrypi4-64 project build
        buildtools - build tools to provide minimal build requirement for poky builds
-       layers - layers for building raspberrypi3-64 project
+       layers - layers for building raspberrypi4-64 project
        setup.sh - project setup script
        bin - various helper applications for setting up and maintaining the release directory
 ```
 
-Verfied machines: raspberrypi3-64 
+Verfied machines: raspberrypi4-64 

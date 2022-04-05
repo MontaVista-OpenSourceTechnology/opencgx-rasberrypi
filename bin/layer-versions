@@ -14,7 +14,7 @@ elif [ -n "$ZSH_NAME" ]; then
 else
     THIS_SCRIPT="$(pwd)/layer-versions"
 fi
-RELEASE_BRANCH="thud"
+RELEASE_BRANCH="kirkstone-cgx"
 PROJECT_LOCATION=$(dirname $(dirname $THIS_SCRIPT))
 TMPFILE=$(mktemp)
 eval $(cat $PROJECT_LOCATION/setup.sh  | sed -n /REPO_CONFIG=/,/^\"/p)
@@ -32,7 +32,7 @@ for config in $(echo $REPO_CONFIG | sed s,\\\\,,g) ; do
          options=$(echo $VAL | cut -d \; -f 2-)
          repo=$(echo $VAL | cut -d \; -f 1)
          repoDir=$(basename $repo | sed s,.git,,)
-         branch="master"
+         branch="kirkstone-cgx"
          sublayer=""
          for option in $(echo $options | sed s,\;,\ ,g); do
             if [ "$(echo $option | cut -d = -f 1)" = "branch" ] ; then

@@ -277,7 +277,7 @@ for REPO_BRANCH in $BRANCHES; do
              fi
              repo=$(echo $VAL | cut -d \; -f 1)
              repoDir=$(basename $repo | sed s,.git,,)
-             branch="master"
+             branch="kirkstone-cgx"
              for option in $(echo $options | sed s,\;,\ ,g); do
                 if [ "$(echo $option | cut -d = -f 1)" = "branch" ] ; then
                    branch=$(echo $option | cut -d = -f 2)
@@ -299,7 +299,7 @@ for REPO_BRANCH in $BRANCHES; do
                    fi
                    GIT_COUNT=1
                    while [ $GIT_COUNT -lt $GIT_RETRIES ] ; do
-                      if [ "$branch" == "master" ] ; then
+                      if [ "$branch" == "kirkstone-cgx" ] ; then
                          git clone --no-hardlinks --mirror --bare --shared $mirroredRepo $subdir/$repoDir.git
                       else
                          git clone --no-hardlinks --branch=$branch --mirror --bare --shared $mirroredRepo $subdir/$repoDir.git

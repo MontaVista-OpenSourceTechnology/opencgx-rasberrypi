@@ -175,7 +175,7 @@ else:
    baseurl=uri + "/" + os.path.basename(cwd)
 remote=baseurl.split("/")[2]
 location="."
-branch="master"
+branch="kirkstone-cgx"
 name = "/".join(baseurl.split("/")[3:])
 if not name.endswith(".git"):
     name = name + ".git"
@@ -184,9 +184,9 @@ if name[0] == "/":
     name = name[1:]
 
 if not local_manifest:
-   default.write("\t<project name=\"" + name + "\" remote=\"" + remote + "\" path=\".\" revision=\"master\"/>\n")
+   default.write("\t<project name=\"" + name + "\" remote=\"" + remote + "\" path=\".\" revision=\"kirkstone-cgx\"/>\n")
 else:
-   default.write("\t<project force-path=\"True\" remote=\"local\" name=\"" + name + "\" path=\".\" revision=\"master\"/>\n")
+   default.write("\t<project force-path=\"True\" remote=\"local\" name=\"" + name + "\" path=\".\" revision=\"kirkstone-cgx\"/>\n")
   
 default.write("</manifest>\n")
 
