@@ -73,7 +73,7 @@ if [ ! -d buildtools ] ; then
          BUILD_TOOLS_LOCATION=$yoctoDownloads/$latestRelease/buildtools/
          releaseDir="$latestRelease"
          releaseVersion="$(echo $latestRelease | cut -d - -f 2)"
-         buildtar="x86_64-buildtools-nativesdk-standalone-$releaseVersion.sh"
+         buildtar="x86_64-buildtools-extended-nativesdk-standalone-$releaseVersion.sh"
       fi 
       if [ -z "$buildtar" ] ; then
          check_lynx || $EXIT 1
