@@ -71,8 +71,8 @@ for config in $REPO_CONFIG; do
     fi
 done
 
-BUILD_TOOLS_LOCATION=http://downloads.yoctoproject.org/releases/yocto/yocto-3.1/buildtools/
-buildtar=x86_64-buildtools-extended-nativesdk-standalone-3.1.sh
+BUILD_TOOLS_LOCATION=http://downloads.yoctoproject.org/releases/yocto/yocto-3.1.9/buildtools/
+buildtar=x86_64-buildtools-extended-nativesdk-standalone-3.1.9.sh
 
 export BUILD_TOOLS_LOCATION
 export buildtar
