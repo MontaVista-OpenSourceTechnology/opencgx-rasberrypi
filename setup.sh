@@ -70,8 +70,8 @@ for config in $REPO_CONFIG; do
     fi
 done
 
-export BUILD_TOOLS_LOCATION
-export buildtar
+export BUILD_TOOLS_LOCATION=http://downloads.yoctoproject.org/releases/yocto//yocto-4.0.16/buildtools/
+export buildtar=x86_64-buildtools-extended-nativesdk-standalone-4.0.16.sh
 $TOPDIR/bin/fetch-buildtools || $EXIT 1
 
 if which python 2>/dev/null >/dev/null; then 
