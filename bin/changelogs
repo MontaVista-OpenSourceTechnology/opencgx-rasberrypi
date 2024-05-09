@@ -18,7 +18,7 @@ fi
 TMPFILE=$(mktemp)
 PROJECT_LOCATION=$(dirname $(dirname $(readlink -f $THIS_SCRIPT)))
 CHANGELOGS=$PROJECT_LOCATION/changelogs
-BASE_BRANCH=thud
+BASE_BRANCH=scarthgap-cgx
 help_text () {
     echo  >&2
     echo "   changelogs Options:" >&2

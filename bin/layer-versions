@@ -14,7 +14,7 @@ elif [ -n "$ZSH_NAME" ]; then
 else
     THIS_SCRIPT="$(pwd)/layer-versions"
 fi
-RELEASE_BRANCH="thud"
+RELEASE_BRANCH="scarthgap-cgx"
 PROJECT_LOCATION=$(dirname $(dirname $THIS_SCRIPT))
 TMPFILE=$(mktemp)
 eval $(cat $PROJECT_LOCATION/setup.sh  | sed -n /REPO_CONFIG=/,/^\"/p)
