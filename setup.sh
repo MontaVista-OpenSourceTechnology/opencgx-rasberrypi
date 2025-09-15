@@ -72,7 +72,7 @@ done
 
 export BUILD_TOOLS_LOCATION=https://downloads.yoctoproject.org/releases/yocto/yocto-5.0/buildtools/
 export buildtar=x86_64-buildtools-extended-nativesdk-standalone-5.0.sh
-bash -x $TOPDIR/bin/fetch-buildtools || $EXIT 1
+bash $TOPDIR/bin/fetch-buildtools || $EXIT 1
 
 if which python 2>/dev/null >/dev/null; then 
     PYTHON=python
