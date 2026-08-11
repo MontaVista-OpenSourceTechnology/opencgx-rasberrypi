@@ -1,48 +1,56 @@
-[submodule "layers/poky"]
-	path = layers/poky
-	url = https://github.com/MontaVista-OpenSourceTechnology/poky.git
-	branch = master
 [submodule "layers/meta-openembedded"]
 	path = layers/meta-openembedded
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-openembedded.git
-	branch = master
+	branch = wrynose
 [submodule "layers/meta-clang"]
 	path = layers/meta-clang
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-clang.git
-	branch = master
+	branch = wrynose
 [submodule "layers/meta-virtualization"]
 	path = layers/meta-virtualization
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-virtualization.git
-	branch = master
+	branch = wrynose
 [submodule "layers/meta-qa"]
 	path = layers/meta-qa
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-qa.git
-	branch = master
+	branch = wrynose
 [submodule "layers/meta-montavista-cgx"]
 	path = layers/meta-montavista-cgx
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-montavista-cgx.git
-	branch = master
+	branch = wrynose
 [submodule "layers/meta-selinux"]
 	path = layers/meta-selinux
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-selinux.git
-	branch = master
+	branch = wrynose
 [submodule "layers/meta-security"]
 	path = layers/meta-security
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-security.git
-	branch = master
+	branch = wrynose
 [submodule "layers/meta-cgl"]
 	path = layers/meta-cgl
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-cgl.git
-	branch = master
+	branch = wrynose
 [submodule "layers/meta-cloud-services"]
 	path = layers/meta-cloud-services
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-cloud-services.git
-	branch = master
+	branch = wrynose
 [submodule "layers/meta-montavista-cgl"]
 	path = layers/meta-montavista-cgl
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-montavista-cgl.git
-	branch = master
+	branch = wrynose
 [submodule "layers/meta-raspberrypi"]
 	path = layers/meta-raspberrypi
 	url = https://github.com/MontaVista-OpenSourceTechnology/meta-raspberrypi.git
-	branch = master
+	branch = wrynose
+[submodule "layers/openembedded-core"]
+	path = layers/openembedded-core
+	url = https://github.com/MontaVista-OpenSourceTechnology/openembedded-core
+	branch = wrynose
+[submodule "layers/meta-yocto"]
+	path = layers/meta-yocto
+	url = https://github.com/MontaVista-OpenSourceTechnology/meta-yocto
+	branch = wrynose
+[submodule "layers/bitbake"]
+	path = layers/bitbake
+	url = https://github.com/MontaVista-OpenSourceTechnology/bitbake
+	branch = 2.18
